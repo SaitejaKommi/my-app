@@ -30,6 +30,8 @@ import {
 import { useState, useEffect, useRef } from "react"
 import { dispatchBuild } from "@/lib/archai/build-dispatcher"
 import { runBuildSession } from "@/lib/archai/build-agent"
+import { PhasesView } from "./PhasesView"
+import type { Phase, PhaseChain } from "@/db/phases-schema"
 
 interface BlueprintResultProps {
   blueprint: Blueprint
@@ -37,13 +39,15 @@ interface BlueprintResultProps {
   isClarifying?: boolean
 }
 
-type TabType = "overview" | "product" | "architecture" | "engineering" | "quality" | "performance" | "ship" | "deliverables" | "handoff" | "audit"
+type TabType = "overview" | "product" | "architecture" | "engineering" | "quality" | "performance" | "ship" | "deliverables" | "handoff" | "audit" | "phases"
 type BuildState = "idle" | "dispatching" | "building" | "qa" | "shipping" | "done"
 
 export function BlueprintResult({ blueprint, onClarify, isClarifying }: BlueprintResultProps) {
   const [activeTab, setActiveTab] = useState<TabType>("overview")
   const [buildState, setBuildState] = useState<BuildState>("idle")
   const [buildLogs, setBuildLogs] = useState<string[]>([])
+  const [phases, setPhases] = useState<Phase[]>([])
+  const [phasesLoading, setPhasesLoading] = useState(false)
   const logEndRef = useRef<HTMLDivElement>(null)
 
   const tabs = [
@@ -51,6 +55,7 @@ export function BlueprintResult({ blueprint, onClarify, isClarifying }: Blueprin
     { id: "product", label: "Product Spec", icon: Package },
     { id: "architecture", label: "Architecture", icon: Cpu },
     { id: "engineering", label: "Engineering", icon: FileCode },
+    { id: "phases", label: "Implementation", icon: Rocket },
     { id: "quality", label: "Quality Audit", icon: ShieldCheck },
     { id: "performance", label: "Performance", icon: Activity },
     { id: "ship", label: "Shipping", icon: Rocket },
@@ -188,6 +193,32 @@ export function BlueprintResult({ blueprint, onClarify, isClarifying }: Blueprin
 
   const handleClarifySubmit = () => {
     if (onClarify) onClarify(clarificationAnswers)
+  }
+
+  const handleGeneratePhases = async () => {
+    setPhasesLoading(true)
+    try {
+      const response = await fetch("/api/v1/phases", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ blueprint }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to generate phases")
+      }
+
+      const data = await response.json()
+      if (data.success) {
+        setPhases(data.data.phases || [])
+      }
+    } catch (error) {
+      console.error("Error generating phases:", error)
+      // Fallback: show error message
+      setPhases([])
+    } finally {
+      setPhasesLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -637,6 +668,52 @@ export function BlueprintResult({ blueprint, onClarify, isClarifying }: Blueprin
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* PHASES TAB - IMPLEMENTATION CODE */}
+          {activeTab === "phases" && (
+            <div className="space-y-6 animate-in fade-in duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-white">Implementation Phases</h3>
+                  <p className="text-sm text-zinc-400 mt-1">
+                    AI-generated code artifacts for each development phase
+                  </p>
+                </div>
+                <button
+                  onClick={handleGeneratePhases}
+                  disabled={phasesLoading || phases.length > 0}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-bold text-sm transition-all flex items-center gap-2"
+                >
+                  {phasesLoading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                      Generating Code...
+                    </>
+                  ) : phases.length > 0 ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      Phases Generated
+                    </>
+                  ) : (
+                    <>
+                      <Rocket className="w-4 h-4" />
+                      Generate Phases
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {phases.length > 0 ? (
+                <PhasesView phases={phases} />
+              ) : (
+                <div className="text-center py-16 text-zinc-500">
+                  <Rocket className="w-12 h-12 mx-auto mb-4 opacity-40" />
+                  <p className="mb-2">No implementation phases generated yet</p>
+                  <p className="text-sm">Click the button above to generate AI code for each phase</p>
+                </div>
+              )}
             </div>
           )}
 
