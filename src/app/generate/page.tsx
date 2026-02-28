@@ -16,6 +16,7 @@ export default function GeneratorPage() {
   const [lastInput, setLastInput] = useState<FullRequirementsData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isClarifying, setIsClarifying] = useState(false)
+  const [stage, setStage] = useState<"intake" | "clarification" | "result">("intake")
 
   const handleGenerate = async (data: FullRequirementsData, answersOrEvent?: unknown) => {
     let retries = 0
@@ -33,6 +34,7 @@ export default function GeneratorPage() {
       setIsLoading(true)
       setLastInput(data)
       setBlueprint(null)
+      setStage("intake")
     }
 
     nProgress.start()
@@ -51,6 +53,11 @@ export default function GeneratorPage() {
 
         if (result.success) {
           setBlueprint(result.data)
+          if (result.data.clarification?.status === "pending") {
+            setStage("clarification")
+          } else {
+            setStage("result")
+          }
           success = true
         } else {
           throw new Error(result.error?.message || "Generation failed")
@@ -75,6 +82,14 @@ export default function GeneratorPage() {
     handleGenerate(lastInput, answers)
   }
 
+  const handleStartOver = () => {
+    setBlueprint(null)
+    setLastInput(null)
+    setIsLoading(false)
+    setIsClarifying(false)
+    setStage("intake")
+  }
+
   return (
     <main className="min-h-screen bg-background text-foreground">
       <div className="max-w-[1400px] mx-auto px-4 py-8 md:py-10 space-y-6">
@@ -88,18 +103,30 @@ export default function GeneratorPage() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
-          <RequirementsWizard onSubmit={handleGenerate} isLoading={isLoading} />
+        <div className="space-y-4">
+          <div className="rounded-lg border bg-muted/30 p-3 text-sm">
+            <span className={stage === "intake" ? "font-semibold text-foreground" : "text-muted-foreground"}>1. Intake Questions</span>
+            <span className="mx-2 text-muted-foreground">→</span>
+            <span className={stage === "clarification" ? "font-semibold text-foreground" : "text-muted-foreground"}>2. Clarification Questions</span>
+            <span className="mx-2 text-muted-foreground">→</span>
+            <span className={stage === "result" ? "font-semibold text-foreground" : "text-muted-foreground"}>3. Final PRD</span>
+          </div>
 
-          {blueprint ? (
+          {stage === "intake" && (
+            <RequirementsWizard onSubmit={handleGenerate} isLoading={isLoading} />
+          )}
+
+          {stage !== "intake" && blueprint && (
             <BlueprintResult
               blueprint={blueprint}
               onClarify={handleClarify}
               isClarifying={isClarifying}
             />
-          ) : (
-            <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground bg-card">
-              Submit the intake to render the generated blueprint here.
+          )}
+
+          {stage !== "intake" && (
+            <div className="flex justify-end">
+              <Button variant="outline" onClick={handleStartOver}>Start Over</Button>
             </div>
           )}
         </div>

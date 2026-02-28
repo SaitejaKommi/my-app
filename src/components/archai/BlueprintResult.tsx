@@ -24,7 +24,8 @@ import {
   Activity,
   History,
   Download,
-  FileBox
+  FileBox,
+  FileText
 } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { dispatchBuild } from "@/lib/archai/build-dispatcher"
@@ -36,7 +37,7 @@ interface BlueprintResultProps {
   isClarifying?: boolean
 }
 
-type TabType = "overview" | "product" | "architecture" | "engineering" | "quality" | "performance" | "ship" | "handoff" | "audit"
+type TabType = "overview" | "product" | "architecture" | "engineering" | "quality" | "performance" | "ship" | "deliverables" | "handoff" | "audit"
 type BuildState = "idle" | "dispatching" | "building" | "qa" | "shipping" | "done"
 
 export function BlueprintResult({ blueprint, onClarify, isClarifying }: BlueprintResultProps) {
@@ -53,9 +54,91 @@ export function BlueprintResult({ blueprint, onClarify, isClarifying }: Blueprin
     { id: "quality", label: "Quality Audit", icon: ShieldCheck },
     { id: "performance", label: "Performance", icon: Activity },
     { id: "ship", label: "Shipping", icon: Rocket },
+    { id: "deliverables", label: "Files", icon: FileText },
     { id: "handoff", label: "Handoff", icon: FileBox },
     { id: "audit", label: "Execution Audit", icon: History },
   ]
+
+  const downloadArtifact = (filename: string, content: string) => {
+    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
+  const prdContent = [
+    "# Product Requirements Document",
+    "",
+    "## Executive Summary",
+    blueprint.startupSummary.split("\n\n[ORCHESTRATOR]")[0],
+    "",
+    "## Users & Personas",
+    ...blueprint.productSpec.personas.map((persona) => `- ${persona}`),
+    "",
+    "## Core Journeys",
+    ...blueprint.productSpec.coreJourneys.map((journey, index) => `${index + 1}. ${journey}`),
+    "",
+    "## Success Criteria",
+    ...blueprint.productSpec.successCriteria.map((criterion) => `- ${criterion}`),
+    "",
+    "## Risks",
+    ...blueprint.risks.map((risk) => `- ${risk}`),
+    "",
+    "## Stability",
+    `- Stability Score: ${blueprint.stabilityScore}%`,
+    `- Risk Level: ${blueprint.riskLevel}`,
+    `- Architecture Mode: ${blueprint.architectureMode}`,
+  ].join("\n")
+
+  const techStackContent = [
+    "# Tech Stack",
+    "",
+    "## Recommended Stack",
+    `- Frontend: ${blueprint.recommendedStack.frontend}`,
+    `- Backend: ${blueprint.recommendedStack.backend}`,
+    `- Database: ${blueprint.recommendedStack.database}`,
+    `- Infrastructure: ${blueprint.recommendedStack.infra}`,
+    "",
+    "## Services",
+    ...blueprint.services.map((service) => `- ${service.name}: ${service.responsibility}`),
+    "",
+    "## Key Dependencies",
+    ...blueprint.engineeringSpec.keyDependencies.map((dependency) => `- ${dependency}`),
+    "",
+    "## Environment Variables",
+    ...blueprint.engineeringSpec.envVariables.map((envVar) => `- ${envVar}`),
+  ].join("\n")
+
+  const detailedContent = [
+    "# Detailed Engineering Specification",
+    "",
+    "## Folder Structure",
+    ...blueprint.engineeringSpec.folderStructure.map((entry) => `- ${entry}`),
+    "",
+    "## API Contracts",
+    ...blueprint.engineeringSpec.apiContracts.flatMap((api) => [
+      `### ${api.method} ${api.endpoint}`,
+      `- Description: ${api.description}`,
+      `- Payload: ${api.payload || "n/a"}`,
+      `- Response: ${api.response}`,
+      "",
+    ]),
+    "## Database Schema",
+    ...blueprint.engineeringSpec.databaseSchema.flatMap((table) => [
+      `### ${table.table}`,
+      "- Columns:",
+      ...table.columns.map((column) => `  - ${column}`),
+      ...(table.indexes && table.indexes.length > 0
+        ? ["- Indexes:", ...table.indexes.map((indexName) => `  - ${indexName}`)]
+        : ["- Indexes: none"]),
+      "",
+    ]),
+  ].join("\n")
 
   const handleStartBuild = async () => {
     setBuildState("dispatching")
@@ -284,7 +367,7 @@ export function BlueprintResult({ blueprint, onClarify, isClarifying }: Blueprin
                   </div>
                   <h4 className="text-sm font-bold uppercase text-zinc-500 mb-2 tracking-wider">Startup Summary</h4>
                   <p className="text-zinc-200 leading-relaxed font-medium italic">
-                    "{blueprint.startupSummary.split("\n\n[ORCHESTRATOR]")[0]}"
+                    &ldquo;{blueprint.startupSummary.split("\n\n[ORCHESTRATOR]")[0]}&rdquo;
                   </p>
                 </div>
 
@@ -447,7 +530,7 @@ export function BlueprintResult({ blueprint, onClarify, isClarifying }: Blueprin
                     Structure
                   </h4>
                   <div className="bg-black/50 p-4 rounded-lg border border-zinc-800 font-mono text-[11px] text-zinc-400">
-                    <div className="text-zinc-600 mb-2">// Repository Layout</div>
+                    <div className="text-zinc-600 mb-2">{"// Repository Layout"}</div>
                     {blueprint.engineeringSpec.folderStructure.map((path, i) => (
                       <div key={i} className="flex items-center gap-2 mb-1">
                         <span className="text-zinc-700">├──</span>
@@ -738,6 +821,38 @@ export function BlueprintResult({ blueprint, onClarify, isClarifying }: Blueprin
             </div>
           )}
 
+          {/* DELIVERABLE FILES TAB */}
+          {activeTab === "deliverables" && (
+            <div className="space-y-6 animate-in fade-in duration-300">
+              <div className="grid grid-cols-1 gap-4">
+                {[
+                  { title: "PRD File", fileName: "PRD.md", content: prdContent },
+                  { title: "Tech Stack File", fileName: "TECH_STACK.md", content: techStackContent },
+                  { title: "Detailed File", fileName: "DETAILED_SPEC.md", content: detailedContent },
+                ].map((artifact) => (
+                  <div key={artifact.fileName} className="bg-zinc-900/40 rounded-lg border border-border/10 overflow-hidden">
+                    <div className="px-4 py-3 border-b border-border/10 flex items-center justify-between">
+                      <div>
+                        <h4 className="text-sm font-bold text-white">{artifact.title}</h4>
+                        <p className="text-[11px] text-zinc-500 font-mono">{artifact.fileName}</p>
+                      </div>
+                      <button
+                        onClick={() => downloadArtifact(artifact.fileName, artifact.content)}
+                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-2"
+                      >
+                        <Download className="w-3 h-3" />
+                        Download
+                      </button>
+                    </div>
+                    <pre className="max-h-64 overflow-auto p-4 text-[10px] font-mono text-zinc-300 bg-black/40">
+                      {artifact.content}
+                    </pre>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* HANDOFF TAB */}
           {activeTab === "handoff" && (
             <div className="space-y-6 animate-in fade-in duration-300">
@@ -966,7 +1081,6 @@ export function BlueprintResult({ blueprint, onClarify, isClarifying }: Blueprin
                 const currentIdx = statesOrder.indexOf(buildState)
                 const targetIdx = statesOrder.indexOf(step.state as BuildState)
                 const isCompleted = currentIdx >= targetIdx
-                const isCurrent = currentIdx === targetIdx - 1
                 
                 return (
                   <div key={step.domain} className="space-y-2">
