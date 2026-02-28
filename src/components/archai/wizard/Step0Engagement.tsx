@@ -42,6 +42,8 @@ export function Step0Engagement() {
                 <SelectItem value="technical_founder">Technical founder</SelectItem>
                 <SelectItem value="engineering_lead_cto">Engineering lead / CTO</SelectItem>
                 <SelectItem value="enterprise_it_representative">Enterprise IT representative</SelectItem>
+                <SelectItem value="external_consultant">External consultant</SelectItem>
+                <SelectItem value="investor_auditor">Investor / auditor</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -59,6 +61,44 @@ export function Step0Engagement() {
               </SelectContent>
             </Select>
           </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label>How detailed should this architecture plan be? *</Label>
+          <Select
+            onValueChange={(v) => setValue("planningDepth", v as FullRequirementsData["planningDepth"])}
+            defaultValue={watch("planningDepth")}
+          >
+            <SelectTrigger><SelectValue placeholder="Select planning depth" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="quick_startup_blueprint">Quick startup blueprint</SelectItem>
+              <SelectItem value="production_grade_system">Production-grade system</SelectItem>
+              <SelectItem value="enterprise_compliance_ready">Enterprise-grade compliance-ready</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label>System Classification *</Label>
+          <Select
+            onValueChange={(v) => setValue("systemClassification", v as FullRequirementsData["systemClassification"])}
+            defaultValue={watch("systemClassification")}
+          >
+            <SelectTrigger><SelectValue placeholder="Select system type" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="public_web_application">Public web application</SelectItem>
+              <SelectItem value="mobile_application">Mobile application</SelectItem>
+              <SelectItem value="internal_enterprise_system">Internal enterprise system</SelectItem>
+              <SelectItem value="marketplace_platform">Marketplace platform</SelectItem>
+              <SelectItem value="financial_transaction_system">Financial transaction system</SelectItem>
+              <SelectItem value="healthcare_system">Healthcare system</SelectItem>
+              <SelectItem value="government_platform">Government platform</SelectItem>
+              <SelectItem value="data_platform_analytics_system">Data platform / analytics system</SelectItem>
+              <SelectItem value="iot_hardware_integrated_system">IoT / hardware-integrated system</SelectItem>
+              <SelectItem value="media_streaming_system">Media / streaming system</SelectItem>
+              <SelectItem value="hybrid_system">Hybrid system</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </div>

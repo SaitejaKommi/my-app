@@ -8,10 +8,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export function Step5TechnicalDeepDive() {
   const { register, setValue, watch } = useFormContext<FullRequirementsData>()
   const isMongo = watch("primaryDatabase") === "mongodb"
+  const hasFinancialLogic = watch("hasFinancialLogic")
+  const financialAuditRequirement = watch("financialAuditRequirement")
+  const consistencyRequirement = watch("consistencyRequirement")
   const relationalWorkflow = ["role_based_approval", "long_running_processes"].includes(
     watch("workflowComplexityLevel") ?? ""
   )
   const relationalWarning = isMongo && relationalWorkflow
+  const contradictionSeverity =
+    isMongo &&
+    hasFinancialLogic &&
+    (financialAuditRequirement === "double_entry_accounting_required" || consistencyRequirement === "transactional_guarantees_required")
+      ? "Blocking"
+      : isMongo && hasFinancialLogic
+        ? "Severe"
+        : relationalWarning
+          ? "Moderate"
+          : null
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -138,9 +151,9 @@ export function Step5TechnicalDeepDive() {
           )}
         </div>
 
-        {relationalWarning && (
+        {contradictionSeverity && (
           <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200">
-            Advisory: MongoDB + strongly relational workflows detected. Relational integrity requirements may be better served by PostgreSQL.
+            {contradictionSeverity} contradiction risk: MongoDB selection is under relational/financial pressure. Consider PostgreSQL for ACID integrity and safer reconciliation.
           </div>
         )}
       </div>

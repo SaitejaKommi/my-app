@@ -622,26 +622,43 @@ export const EngagementProfile = z.enum([
   "technical_founder",
   "engineering_lead_cto",
   "enterprise_it_representative",
+  "external_consultant",
+  "investor_auditor",
 ]);
 
 export const EngagementMode = z.enum(["non_technical", "technical"]);
+export const IntakeStatus = z.enum([
+  "DRAFT",
+  "SUBMITTED",
+  "UNDER_CLARIFICATION",
+  "APPROVED",
+  "FROZEN",
+]);
+export const PlanningDepth = z.enum([
+  "quick_startup_blueprint",
+  "production_grade_system",
+  "enterprise_compliance_ready",
+]);
 export const BusinessObjective = z.enum([
-  "new_revenue_streams",
-  "reduce_operational_costs",
-  "replace_legacy_tooling",
-  "enable_marketplace_transactions",
-  "aggregate_monetize_data",
-  "internal_process_optimization",
-  "strategic_platform_expansion",
+  "revenue_generation",
+  "cost_reduction",
+  "operational_automation",
+  "regulatory_compliance",
+  "marketplace_enablement",
+  "platform_expansion",
+  "data_monetization",
+  "internal_productivity",
 ]);
 export const RevenueArchitecture = z.enum([
-  "subscription_tiers",
-  "usage_based_billing",
-  "commission_marketplace",
-  "enterprise_contracts",
-  "freemium_conversion",
+  "subscription",
+  "usage_based",
+  "licensing",
+  "transaction_fees",
+  "commission",
   "advertising",
-  "not_monetized_internal",
+  "government_funding",
+  "internal_cost_savings",
+  "not_revenue_driven",
 ]);
 export const CompetitivePositioning = z.enum([
   "speed_latency",
@@ -653,12 +670,28 @@ export const CompetitivePositioning = z.enum([
   "network_effects",
 ]);
 export const WorkflowComplexity = z.enum([
+  "no_state_logic",
   "simple_crud",
+  "simple_lifecycle",
   "multi_step_forms",
   "role_based_approval",
+  "financial_settlement_lifecycle",
+  "regulatory_state_transitions",
+  "irreversible_states",
   "long_running_processes",
   "human_in_loop",
   "external_callbacks",
+]);
+export const WorkflowCharacteristic = z.enum([
+  "simple_crud",
+  "conditional_branching",
+  "sla_driven_deadlines",
+  "background_automation",
+  "event_triggered_flows",
+  "human_in_loop",
+  "external_callback_integration",
+  "real_time_decision_engine",
+  "high_frequency_transactions",
 ]);
 export const BusinessCriticality = z.enum([
   "minor_inconvenience",
@@ -666,14 +699,17 @@ export const BusinessCriticality = z.enum([
   "contractual_penalties",
   "legal_exposure",
   "safety_implications",
+  "high_financial_damage_per_hour",
 ]);
 export const DataClassificationType = z.enum([
   "public_content",
   "account_credentials",
+  "pii",
   "financial_data",
   "health_records",
   "government_data",
   "trade_secrets",
+  "intellectual_property",
   "biometric_data",
 ]);
 export const TrafficProfile = z.enum([
@@ -681,6 +717,8 @@ export const TrafficProfile = z.enum([
   "seasonal_spikes",
   "viral_unpredictable",
   "always_on_high_concurrency",
+  "high_frequency_event_ingestion",
+  "edge_device_ingestion",
 ]);
 export const ComputeNeed = z.enum([
   "scheduled_background_jobs",
@@ -691,14 +729,48 @@ export const ComputeNeed = z.enum([
   "ai_inference",
   "streaming_responses",
 ]);
+export const SystemClassification = z.enum([
+  "public_web_application",
+  "mobile_application",
+  "internal_enterprise_system",
+  "marketplace_platform",
+  "financial_transaction_system",
+  "healthcare_system",
+  "government_platform",
+  "data_platform_analytics_system",
+  "iot_hardware_integrated_system",
+  "media_streaming_system",
+  "hybrid_system",
+]);
+export const DataStructureType = z.enum([
+  "strongly_relational",
+  "document_oriented",
+  "time_series",
+  "graph_relationships",
+  "key_value",
+  "large_binary_media_storage",
+  "hybrid",
+]);
+export const ConsistencyRequirement = z.enum([
+  "strong_consistency_required",
+  "eventual_consistency_acceptable",
+  "mixed_consistency",
+  "transactional_guarantees_required",
+]);
 export const RetentionPolicy = z.enum([
   "permanent_storage",
+  "regulatory_retention_period",
   "time_bound_deletion",
   "user_controlled_deletion",
+  "auto_archival",
   "regulatory_driven_retention",
+  "immutable_record_storage_required",
 ]);
 export const DataResidencyConstraint = z.enum([
   "no_restriction",
+  "regional_storage_required",
+  "country_level_isolation",
+  "multi_region_redundancy_required",
   "eu_only",
   "us_only",
   "multi_region_isolation_required",
@@ -721,6 +793,88 @@ export const AiFunctionalRole = z.enum([
 ]);
 export const AiModelStrategy = z.enum(["external_api", "self_hosted", "hybrid"]);
 export const AiLatencyRequirement = z.enum(["under_200ms", "under_1s", "under_3s", "async_acceptable"]);
+export const RequestCharacteristic = z.enum([
+  "small_payloads",
+  "large_uploads",
+  "streaming_required",
+  "long_lived_connections",
+  "websockets_required",
+  "grpc_required",
+]);
+export const FinancialTransactionModel = z.enum([
+  "simple_payments",
+  "escrow",
+  "multi_party_settlement",
+  "ledger_based_accounting",
+  "real_time_reconciliation",
+  "multi_currency",
+  "cross_border",
+]);
+export const FinancialAuditRequirement = z.enum([
+  "basic_logs_sufficient",
+  "immutable_audit_logs_required",
+  "double_entry_accounting_required",
+  "external_audit_integrations_required",
+]);
+export const IntegrationSurface = z.enum([
+  "payment_providers",
+  "banking_apis",
+  "erp",
+  "crm",
+  "government_apis",
+  "iot_devices",
+  "webhooks",
+  "data_warehouse",
+  "third_party_saas",
+  "hardware_systems",
+]);
+export const ApiExposureModel = z.enum([
+  "no",
+  "internal_only",
+  "partner_api",
+  "public_api",
+  "sdk_required",
+]);
+export const AdvancedCapability = z.enum([
+  "ai_assistant",
+  "fraud_detection",
+  "risk_scoring",
+  "predictive_analytics",
+  "recommendation_engine",
+  "search_indexing",
+  "document_processing",
+  "computer_vision",
+  "none",
+]);
+export const ProcessingModel = z.enum([
+  "real_time_inference",
+  "batch_processing",
+  "streaming_analytics",
+  "offline_model_training",
+  "external_ai_apis",
+  "self_hosted_models",
+]);
+export const ThreatProfile = z.enum([
+  "fraud",
+  "data_theft",
+  "ddos",
+  "insider_threats",
+  "nation_state_attacks",
+]);
+export const AvailabilityTarget = z.enum([
+  "best_effort",
+  "99",
+  "99_9",
+  "99_99",
+  "99_999",
+]);
+export const HostingPreference = z.enum([
+  "fully_managed",
+  "hybrid",
+  "self_hosted",
+  "on_prem_required",
+  "multi_cloud_required",
+]);
 export const AdminControl = z.enum([
   "user_management",
   "role_management",
@@ -732,17 +886,38 @@ export const AdminControl = z.enum([
   "system_announcements",
 ]);
 export const ObservabilityRequirement = z.enum([
+  "basic_logging",
   "error_tracking_only",
   "structured_logging",
   "distributed_tracing",
   "sla_monitoring",
   "alerting",
+  "immutable_audit_dashboard",
+]);
+export const AuthenticationExpectation = z.enum([
+  "basic_login",
+  "oauth",
+  "enterprise_sso",
+  "mfa",
+  "passkeys",
+  "hardware_token_integration",
+]);
+export const AuthorizationExpectation = z.enum([
+  "rbac",
+  "abac",
+  "policy_based",
+  "ownership_based",
+  "field_level_permissions",
+  "tenant_scoped_isolation",
 ]);
 export const IntendedLifespan = z.enum([
   "prototype",
+  "mvp",
   "mvp_1_to_2_years",
+  "three_to_five_year_system",
   "long_term_scalable_platform",
   "enterprise_grade_system",
+  "enterprise_long_term_system",
 ]);
 export const ExitVision = z.enum([
   "acquisition",
@@ -750,10 +925,42 @@ export const ExitVision = z.enum([
   "cash_flow_lifestyle",
   "internal_tool_only",
 ]);
+export const TeamMaturityLevel = z.enum([
+  "solo_founder",
+  "small_early_stage_team",
+  "experienced_startup_team",
+  "enterprise_engineering_org",
+]);
+export const TeamSeniorityLevel = z.enum([
+  "mostly_juniors",
+  "mixed_mid_senior",
+  "senior_staff_principal",
+]);
+export const DevOpsMaturityLevel = z.enum([
+  "minimal_manual",
+  "basic_ci_cd",
+  "automated_platform_engineering",
+  "sre_ready",
+]);
+export const SecurityExpertiseLevel = z.enum([
+  "none",
+  "part_time",
+  "dedicated_engineer",
+  "security_team",
+]);
+export const CostSensitivityIndex = z.enum([
+  "cost_first",
+  "balanced",
+  "performance_first",
+]);
 
 export const Section26Schema = z.object({
+  intakeSchemaVersion: z.string().default("1.0.0"),
+  intakeStatus: IntakeStatus.default("SUBMITTED"),
   engagementProfile: EngagementProfile.optional(),
   engagementMode: EngagementMode.optional(),
+  planningDepth: PlanningDepth.optional(),
+  systemClassification: SystemClassification.optional(),
   businessObjective: BusinessObjective.optional(),
   businessSuccessKpi: z.string().max(250).optional(),
   revenueArchitecture: RevenueArchitecture.optional(),
@@ -770,9 +977,15 @@ export const Section26Schema = z.object({
   stateTransitionsTriggerNotifications: z.boolean().default(false),
   stateTransitionsTriggerFinancialEvents: z.boolean().default(false),
   workflowComplexityLevel: WorkflowComplexity.optional(),
+  workflowCharacteristics: z.array(WorkflowCharacteristic).optional(),
   workflowsConfigurableByAdmins: z.boolean().default(false),
   workflowsDifferByTenant: z.boolean().default(false),
   businessCriticality24hOutage: BusinessCriticality.optional(),
+  dataStructureType: DataStructureType.optional(),
+  consistencyRequirement: ConsistencyRequirement.optional(),
+  hasFinancialLogic: z.boolean().default(false),
+  financialTransactionModel: FinancialTransactionModel.optional(),
+  financialAuditRequirement: FinancialAuditRequirement.optional(),
   dataClassification: z.array(DataClassificationType).optional(),
   fieldLevelEncryptionRequired: z.boolean().default(false),
   auditImmutabilityRequired: z.boolean().default(false),
@@ -780,6 +993,7 @@ export const Section26Schema = z.object({
   usersAt36Months: MagnitudeScale.optional(),
   trafficProfile: TrafficProfile.optional(),
   computeNeeds: z.array(ComputeNeed).optional(),
+  requestCharacteristics: z.array(RequestCharacteristic).optional(),
   retentionPolicy: RetentionPolicy.optional(),
   dataResidencyConstraint: DataResidencyConstraint.optional(),
   analyticsExpectations: z.array(AnalyticsExpectation).optional(),
@@ -789,8 +1003,30 @@ export const Section26Schema = z.object({
   aiDataCanLeaveRegion: z.boolean().default(true),
   aiRequiresPrivateModels: z.boolean().default(false),
   aiPromptAuditRequired: z.boolean().default(false),
+  integrationSurface: z.array(IntegrationSurface).optional(),
+  apiExposureModel: ApiExposureModel.optional(),
+  advancedCapabilities: z.array(AdvancedCapability).optional(),
+  processingModels: z.array(ProcessingModel).optional(),
   adminControlsRequired: z.array(AdminControl).optional(),
   observabilityRequirementsDesired: z.array(ObservabilityRequirement).optional(),
+  authenticationExpectations: z.array(AuthenticationExpectation).optional(),
+  authorizationExpectations: z.array(AuthorizationExpectation).optional(),
+  threatProfiles: z.array(ThreatProfile).optional(),
+  availabilityTarget: AvailabilityTarget.optional(),
+  hostingPreference: HostingPreference.optional(),
+  teamMaturityLevel: TeamMaturityLevel.optional(),
+  teamSeniorityLevel: TeamSeniorityLevel.optional(),
+  devOpsMaturityLevel: DevOpsMaturityLevel.optional(),
+  securityExpertiseLevel: SecurityExpertiseLevel.optional(),
+  hasExistingProductionData: z.boolean().default(false),
+  migrationRequired: z.boolean().default(false),
+  backwardCompatibilityRequired: z.boolean().default(false),
+  legacyIntegrationRequired: z.boolean().default(false),
+  gracefulDegradationRequired: z.boolean().default(true),
+  readOnlyModeAcceptable: z.boolean().default(true),
+  backgroundJobsCanDelay: z.boolean().default(true),
+  analyticsCanLag: z.boolean().default(true),
+  costSensitivityIndex: CostSensitivityIndex.optional(),
   intendedSystemLifespan: IntendedLifespan.optional(),
   exitVision: ExitVision.optional(),
   strategicArchitectureIntent: z.string().max(1000).optional(),
@@ -1020,6 +1256,47 @@ export const FullRequirementsSchema = FullRequirementsBaseSchema.superRefine((da
           message: `${field} is required when requiresAI is true.`,
         });
       }
+    });
+  }
+
+  if (data.hasFinancialLogic) {
+    if (!data.financialTransactionModel) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["financialTransactionModel"],
+        message: "financialTransactionModel is required when hasFinancialLogic is true.",
+      });
+    }
+    if (!data.financialAuditRequirement) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["financialAuditRequirement"],
+        message: "financialAuditRequirement is required when hasFinancialLogic is true.",
+      });
+    }
+  }
+
+  if (data.migrationRequired && !data.hasExistingProductionData) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["hasExistingProductionData"],
+      message: "hasExistingProductionData must be true when migrationRequired is true.",
+    });
+  }
+
+  if (data.backwardCompatibilityRequired && data.apiVersioningStrategy === "no_versioning") {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["apiVersioningStrategy"],
+      message: "Backward compatibility requires an explicit API versioning strategy.",
+    });
+  }
+
+  if (data.legacyIntegrationRequired && (!data.integrationSurface || data.integrationSurface.length === 0)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["integrationSurface"],
+      message: "Select at least one integration when legacyIntegrationRequired is true.",
     });
   }
 

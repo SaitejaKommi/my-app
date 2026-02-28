@@ -17,16 +17,25 @@ import { Step2DomainWorkflow } from "./Step2DomainWorkflow"
 import { Step3RiskScale } from "./Step3RiskScale"
 import { Step4DataAi } from "./Step4DataAi"
 import { Step5TechnicalDeepDive } from "./Step5TechnicalDeepDive"
-import { Step6GovernanceRisk } from "./Step6GovernanceRisk"
-import { Step7StrategicIntent } from "./Step7StrategicIntent"
+import { Step5FinancialIntegrity } from "./Step5FinancialIntegrity"
+import { Step7ScaleLoad } from "./Step7ScaleLoad"
+import { Step8Integration } from "./Step8Integration"
+import { Step9Intelligence } from "./Step9Intelligence"
+import { Step10Security } from "./Step10Security"
+import { Step11Resilience } from "./Step11Resilience"
+import { Step12Infrastructure } from "./Step12Infrastructure"
 
 // Default partial values based on schema
 const defaultValues: Partial<z.input<typeof FullRequirementsSchema>> = {
+  intakeSchemaVersion: "1.0.0",
+  intakeStatus: "SUBMITTED",
   engagementProfile: "non_technical_founder",
   engagementMode: "non_technical",
-  businessObjective: "new_revenue_streams",
+  planningDepth: "production_grade_system",
+  systemClassification: "public_web_application",
+  businessObjective: "revenue_generation",
   businessSuccessKpi: "",
-  revenueArchitecture: "subscription_tiers",
+  revenueArchitecture: "subscription",
   entitlementsVaryByPlan: true,
   pricingChangesFrequently: false,
   requiresBillingProration: false,
@@ -39,10 +48,16 @@ const defaultValues: Partial<z.input<typeof FullRequirementsSchema>> = {
   stateTransitionsReversible: true,
   stateTransitionsTriggerNotifications: true,
   stateTransitionsTriggerFinancialEvents: false,
-  workflowComplexityLevel: "multi_step_forms",
+  workflowComplexityLevel: "simple_lifecycle",
+  workflowCharacteristics: ["simple_crud", "background_automation"],
   workflowsConfigurableByAdmins: false,
   workflowsDifferByTenant: false,
   businessCriticality24hOutage: "revenue_impact",
+  dataStructureType: "strongly_relational",
+  consistencyRequirement: "mixed_consistency",
+  hasFinancialLogic: false,
+  financialTransactionModel: "simple_payments",
+  financialAuditRequirement: "basic_logs_sufficient",
   dataClassification: ["account_credentials"],
   fieldLevelEncryptionRequired: false,
   auditImmutabilityRequired: false,
@@ -50,6 +65,7 @@ const defaultValues: Partial<z.input<typeof FullRequirementsSchema>> = {
   usersAt36Months: "100k_to_1m",
   trafficProfile: "seasonal_spikes",
   computeNeeds: ["scheduled_background_jobs"],
+  requestCharacteristics: ["small_payloads"],
   retentionPolicy: "time_bound_deletion",
   dataResidencyConstraint: "no_restriction",
   analyticsExpectations: ["basic_usage_metrics"],
@@ -59,8 +75,30 @@ const defaultValues: Partial<z.input<typeof FullRequirementsSchema>> = {
   aiDataCanLeaveRegion: true,
   aiRequiresPrivateModels: false,
   aiPromptAuditRequired: false,
+  integrationSurface: ["third_party_saas"],
+  apiExposureModel: "internal_only",
+  advancedCapabilities: ["none"],
+  processingModels: ["batch_processing"],
   adminControlsRequired: ["user_management", "audit_logs"],
-  observabilityRequirementsDesired: ["error_tracking_only", "structured_logging"],
+  observabilityRequirementsDesired: ["basic_logging", "structured_logging", "immutable_audit_dashboard"],
+  authenticationExpectations: ["basic_login", "oauth"],
+  authorizationExpectations: ["rbac", "tenant_scoped_isolation"],
+  threatProfiles: ["data_theft"],
+  availabilityTarget: "99_9",
+  hostingPreference: "fully_managed",
+  teamMaturityLevel: "small_early_stage_team",
+  teamSeniorityLevel: "mixed_mid_senior",
+  devOpsMaturityLevel: "basic_ci_cd",
+  securityExpertiseLevel: "part_time",
+  hasExistingProductionData: false,
+  migrationRequired: false,
+  backwardCompatibilityRequired: false,
+  legacyIntegrationRequired: false,
+  gracefulDegradationRequired: true,
+  readOnlyModeAcceptable: true,
+  backgroundJobsCanDelay: true,
+  analyticsCanLag: true,
+  costSensitivityIndex: "balanced",
   intendedSystemLifespan: "long_term_scalable_platform",
   exitVision: "acquisition",
   strategicArchitectureIntent: "",
@@ -247,6 +285,78 @@ const defaultValues: Partial<z.input<typeof FullRequirementsSchema>> = {
   branchStrategy: "github_flow",
 }
 
+const TEST_SEEDS: Record<string, Partial<z.input<typeof FullRequirementsSchema>>> = {
+  founder_mvp: {
+    projectName: "CampusFund MVP",
+    projectStage: "greenfield",
+    engagementProfile: "non_technical_founder",
+    engagementMode: "non_technical",
+    planningDepth: "production_grade_system",
+    systemClassification: "public_web_application",
+    problemStatement: "Students and alumni need a transparent platform to discover and fund campus projects quickly.",
+    solutionSummary: "A web platform for listing projects, collecting contributions, and tracking updates with clear governance.",
+    usersAt12Months: "10k_to_100k",
+    usersAt36Months: "100k_to_1m",
+    complianceFrameworks: ["none"],
+    hasFinancialLogic: true,
+    financialTransactionModel: "simple_payments",
+    financialAuditRequirement: "immutable_audit_logs_required",
+    teamMaturityLevel: "small_early_stage_team",
+    teamSeniorityLevel: "mixed_mid_senior",
+    devOpsMaturityLevel: "basic_ci_cd",
+    securityExpertiseLevel: "part_time",
+    costSensitivityIndex: "cost_first",
+  },
+  regulated_financial: {
+    projectName: "RegLedger Platform",
+    projectStage: "migrating",
+    engagementProfile: "engineering_lead_cto",
+    engagementMode: "technical",
+    planningDepth: "enterprise_compliance_ready",
+    systemClassification: "financial_transaction_system",
+    problemStatement: "Regulated institutions need auditable, low-risk ledger operations with strict compliance and compatibility requirements.",
+    solutionSummary: "A compliance-first transaction platform with immutable audit history, strict controls, and staged migration from legacy systems.",
+    complianceFrameworks: ["soc2_type2", "pci_dss"],
+    hasFinancialLogic: true,
+    financialTransactionModel: "ledger_based_accounting",
+    financialAuditRequirement: "double_entry_accounting_required",
+    consistencyRequirement: "transactional_guarantees_required",
+    dataClassification: ["financial_data", "pii"],
+    migrationRequired: true,
+    hasExistingProductionData: true,
+    backwardCompatibilityRequired: true,
+    legacyIntegrationRequired: true,
+    teamMaturityLevel: "experienced_startup_team",
+    teamSeniorityLevel: "senior_staff_principal",
+    devOpsMaturityLevel: "automated_platform_engineering",
+    securityExpertiseLevel: "dedicated_engineer",
+    costSensitivityIndex: "balanced",
+  },
+  scale_ai: {
+    projectName: "InsightMesh",
+    projectStage: "scaling",
+    engagementProfile: "technical_founder",
+    engagementMode: "technical",
+    planningDepth: "production_grade_system",
+    systemClassification: "data_platform_analytics_system",
+    problemStatement: "Product teams need AI-assisted analytics across high-volume event streams with low-latency insights.",
+    solutionSummary: "A scalable analytics + AI platform supporting real-time insights, background processing, and external integrations.",
+    usersAt12Months: "100k_to_1m",
+    usersAt36Months: "over_1m",
+    trafficProfile: "always_on_high_concurrency",
+    peakConcurrentUsers: "over_50k",
+    advancedCapabilities: ["predictive_analytics", "search_indexing"],
+    processingModels: ["real_time_inference", "streaming_analytics"],
+    requiresAI: true,
+    aiProvider: ["openai"],
+    teamMaturityLevel: "experienced_startup_team",
+    teamSeniorityLevel: "mixed_mid_senior",
+    devOpsMaturityLevel: "sre_ready",
+    securityExpertiseLevel: "part_time",
+    costSensitivityIndex: "performance_first",
+  },
+}
+
 const STEPS = [
   {
     id: "engagement",
@@ -267,28 +377,58 @@ const STEPS = [
     component: Step2DomainWorkflow,
   },
   {
-    id: "risk-scale",
-    title: "Risk & Scale",
-    description: "Criticality, compliance pressure, and growth profile.",
+    id: "risk-compliance",
+    title: "Risk & Compliance",
+    description: "Criticality, regulation, and sensitivity profile.",
     component: Step3RiskScale,
   },
   {
-    id: "data-ai",
-    title: "Data & AI",
-    description: "Data architecture and conditional AI governance.",
+    id: "scale-load",
+    title: "Scale & Load",
+    description: "Growth projection, traffic, and request patterns.",
+    component: Step7ScaleLoad,
+  },
+  {
+    id: "data-architecture",
+    title: "Data Architecture",
+    description: "Topology, consistency, residency, and retention.",
     component: Step4DataAi,
   },
   {
-    id: "governance",
-    title: "Governance",
-    description: "Operational controls and observability expectations.",
-    component: Step6GovernanceRisk,
+    id: "financial-integrity",
+    title: "Financial Integrity",
+    description: "Transaction and audit rigor for money workflows.",
+    component: Step5FinancialIntegrity,
   },
   {
-    id: "strategic-intent",
-    title: "Strategic Intent",
-    description: "Lifespan, exit vision, and architecture direction.",
-    component: Step7StrategicIntent,
+    id: "integration",
+    title: "Integration Ecosystem",
+    description: "External systems and API exposure strategy.",
+    component: Step8Integration,
+  },
+  {
+    id: "intelligence",
+    title: "Intelligence Layer",
+    description: "Advanced processing and AI capabilities.",
+    component: Step9Intelligence,
+  },
+  {
+    id: "security",
+    title: "Security Architecture",
+    description: "Authentication, authorization, and threats.",
+    component: Step10Security,
+  },
+  {
+    id: "resilience",
+    title: "Operational Resilience",
+    description: "Availability, recovery objectives, observability.",
+    component: Step11Resilience,
+  },
+  {
+    id: "infrastructure",
+    title: "Infrastructure Constraints",
+    description: "Hosting, budget, cold-start, and evolution.",
+    component: Step12Infrastructure,
   },
 ]
 
@@ -313,7 +453,7 @@ export function RequirementsWizard({ onSubmit, isLoading }: RequirementsWizardPr
     mode: "onChange",
   })
   
-  const { handleSubmit, formState: { errors } } = form
+  const { handleSubmit, formState: { errors }, reset } = form
   const engagementMode = useWatch({ control: form.control, name: "engagementMode" })
 
   const steps = useMemo(() => {
@@ -327,6 +467,11 @@ export function RequirementsWizard({ onSubmit, isLoading }: RequirementsWizardPr
         TECHNICAL_STEP,
         STEPS[5],
         STEPS[6],
+        STEPS[7],
+        STEPS[8],
+        STEPS[9],
+        STEPS[10],
+        STEPS[11],
       ]
     }
 
@@ -355,6 +500,15 @@ export function RequirementsWizard({ onSubmit, isLoading }: RequirementsWizardPr
   
   const submitForm = (data: FullRequirementsData) => {
     onSubmit(data)
+  }
+
+  const applySeed = (seedKey: keyof typeof TEST_SEEDS) => {
+    reset({
+      ...(defaultValues as z.input<typeof FullRequirementsSchema>),
+      ...(TEST_SEEDS[seedKey] as z.input<typeof FullRequirementsSchema>),
+    })
+    setCurrentStepIndex(0)
+    window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   return (
@@ -413,6 +567,15 @@ export function RequirementsWizard({ onSubmit, isLoading }: RequirementsWizardPr
             </aside>
 
             <section className="p-5 md:p-6 space-y-6">
+              <div className="rounded-lg border bg-muted/30 p-3">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Testing Seeds</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => applySeed("founder_mvp")}>Load Founder MVP</Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => applySeed("regulated_financial")}>Load Regulated Financial</Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => applySeed("scale_ai")}>Load Scale + AI</Button>
+                </div>
+              </div>
+
               <div className="rounded-lg border bg-card p-4">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Current Step</p>
                 <p className="text-base font-semibold mt-1">{steps[safeStepIndex].title}</p>

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateBlueprint } from "@/lib/archai/decision-engine";
-import { analyzeConstraints } from "@/lib/archai/constraint-analyzer";
 import { createSuccessResponse, createErrorResponse } from "@/types/api";
 import { FullRequirementsSchema } from "@/db/requirements-schema";
 import { ZodError } from "zod";
@@ -12,9 +11,6 @@ export async function POST(req: NextRequest) {
     
     // Validate input
     const validatedInput = FullRequirementsSchema.parse(input);
-    
-    // Analyze constraints to get advisory
-    const advisory = analyzeConstraints(validatedInput);
 
     const blueprint = await generateBlueprint(validatedInput, answers);
 

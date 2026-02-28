@@ -1,17 +1,16 @@
 import { Blueprint, BlueprintSchema } from "../../db/output-schema";
 import { type FullRequirementsData } from "../../db/requirements-schema";
-import { validatePRD } from "./evaluators/prd-validator";
-import { validateArchitecture } from "./evaluators/arch-validator";
-import { validateRepo } from "./evaluators/repo-validator";
-import { validateBlueprintConsistency } from "./spec-validator";
-import { runQualityAudit } from "./qa-agent";
-import { runLoadSimulation } from "./load-agent";
-import { orchestrateDeployment } from "./ship-agent";
-import { generateHandoffPackage } from "./handoff-agent";
 import { EXECUTION_MODE } from "./config";
-import { retrieveRelevantPatterns, formatRAGContext } from "./rag-engine";
-import { promptLLM } from "./llm-client";
-import { runStabilityAnalysis, selectArchetype, runQualityGate } from "./prd-engine";
+import {
+  runStabilityAnalysis,
+  selectArchetype,
+  runQualityGate,
+  runArchitecturePressureModel,
+  deriveArchitecturePattern,
+  detectArchitectureConflicts,
+  deriveSignals,
+} from "./prd-engine";
+import { ENGINE_VERSION, runReadinessGate } from "./readiness-gate";
 import { 
   detectAmbiguity, 
   generateClarificationQuestions, 
@@ -20,8 +19,6 @@ import {
   normalizeConstraints
 } from "./domain-agents";
 import { RawInputObject, type ProductRequirementsDoc } from "./pipeline-schemas";
-
-const MAX_REPAIR_ATTEMPTS = 3;
 
 function buildDeterministicPRD(input: FullRequirementsData): ProductRequirementsDoc {
   const personasByUserType: Record<FullRequirementsData["primaryUserType"], string[]> = {
@@ -167,6 +164,7 @@ export async function generateBlueprint(
   input: FullRequirementsData, 
   answers?: Record<string, string>
 ): Promise<Blueprint> {
+  const prdRunId = globalThis.crypto?.randomUUID?.() ?? `run_${Date.now()}`;
   const startTime = Date.now();
   const history: Blueprint["executionAudit"]["history"] = [];
   let totalRepairs = 0;
@@ -209,6 +207,83 @@ export async function generateBlueprint(
     compliance_hints: input.complianceFrameworks && input.complianceFrameworks.includes("soc2_type2") ? "SOC2" : undefined
   };
 
+  const readiness = runReadinessGate(input);
+  if (!readiness.passed && (!answers || Object.keys(answers).length === 0)) {
+    history.push({
+      id: "R00",
+      stage: "Readiness Gate",
+      status: "pending",
+      attempts: 1,
+      details: `Readiness gate failed with ${readiness.issues.length} issue(s).`,
+      timestamp: new Date().toISOString(),
+      durationMs: 0,
+      repairs: readiness.issues.map((i) => `${i.checkId} ${i.field}: ${i.message}`),
+    });
+
+    return BlueprintSchema.parse({
+      startupSummary: "Readiness gate failed. Clarify required fields before PRD generation can proceed.",
+      architectureMode: input.devTeamSize === "enterprise" ? "enterprise_grade" : "lean_mvp",
+      stabilityScore: 0,
+      riskLevel: "Critical",
+      clarification: {
+        status: "pending",
+        questions: readiness.issues.map((issue, index) => ({
+          id: `readiness_${index + 1}`,
+          label: `[${issue.checkId}] ${issue.question}`,
+          type: "text",
+        })),
+      },
+      productSpec: { personas: [], coreJourneys: [], nonGoals: [], successCriteria: [] },
+      recommendedStack: { frontend: "", backend: "", database: "", infra: "" },
+      services: [],
+      engineeringSpec: { folderStructure: [], keyDependencies: [], envVariables: [], apiContracts: [], databaseSchema: [] },
+      qaReport: { score: 0, securityAudit: [], performanceAudit: [], technicalDebt: [] },
+      performanceReport: { maxUsers: 0, bottleneck: "", latencyP99: "", recommendations: [] },
+      shipSpec: { deploymentStrategy: "", ciPipeline: "", infraManifest: "", environmentConfigs: [] },
+      handoffSpec: { readinessScore: 0, handoffPackageUrl: "", nextSteps: [], documentationLinks: [] },
+      executionAudit: { history, totalRepairs: 0, totalDurationMs: 0, orchestratorVersion: `${ENGINE_VERSION}-readiness-gated` },
+      scalingPlan: [],
+      qualityReport: {
+        completenessScore: 0,
+        consistencyDeduction: 0,
+        finalScore: 0,
+        status: "READINESS_BLOCKED",
+        failedSections: [
+          {
+            sectionId: "READINESS",
+            pointsLost: 100,
+            remediationInstruction: "Resolve all readiness gate issues before Phase 1 can start.",
+          },
+        ],
+        failedChecks: readiness.issues.map((issue) => ({
+          checkId: issue.checkId,
+          description: issue.message,
+          fix: issue.question,
+        })),
+      },
+      governance: {
+        prdRunId,
+        prdVersion: "1.0.0",
+        prdStatus: "REVISION_REQUIRED",
+        qualityPassed: false,
+        iterations: 0,
+        approvedBy: [],
+        approvedAt: null,
+        frozenAt: null,
+        downstreamUnlocked: false,
+      },
+      pipelineMeta: {
+        engineVersion: ENGINE_VERSION,
+        intakeSchemaVersion: input.intakeSchemaVersion ?? "unknown",
+        readinessScore: readiness.score,
+        qualityScore: 0,
+        qualityStatus: "READINESS_BLOCKED",
+        freezeEligible: false,
+      },
+      risks: readiness.issues.map((issue) => `${issue.checkId} [${issue.severity}] ${issue.message}`),
+    });
+  }
+
   // --- STEP 02: AMBIGUITY DETECTOR ---
   startStage("S02");
   const gapReport = await detectAmbiguity(rawInput);
@@ -242,6 +317,43 @@ export async function generateBlueprint(
       handoffSpec: { readinessScore: 0, handoffPackageUrl: "", nextSteps: [], documentationLinks: [] },
       executionAudit: { history, totalRepairs: 0, totalDurationMs: 0, orchestratorVersion: "1.4.0-25step" },
       scalingPlan: [],
+      qualityReport: {
+        completenessScore: 0,
+        consistencyDeduction: 0,
+        finalScore: 0,
+        status: "READINESS_BLOCKED",
+        failedSections: [
+          {
+            sectionId: "CLARIFICATION",
+            pointsLost: 100,
+            remediationInstruction: "Answer all clarification questions to continue deterministic PRD generation.",
+          },
+        ],
+        failedChecks: gapReport.ambiguous_areas.map((area, index) => ({
+          checkId: `AMB-${index + 1}`,
+          description: area,
+          fix: "Provide explicit values in clarification answers.",
+        })),
+      },
+      governance: {
+        prdRunId,
+        prdVersion: "1.0.0",
+        prdStatus: "REVISION_REQUIRED",
+        qualityPassed: false,
+        iterations: 0,
+        approvedBy: [],
+        approvedAt: null,
+        frozenAt: null,
+        downstreamUnlocked: false,
+      },
+      pipelineMeta: {
+        engineVersion: ENGINE_VERSION,
+        intakeSchemaVersion: input.intakeSchemaVersion ?? "unknown",
+        readinessScore: Math.max(readiness.score, gapReport.clarity_score),
+        qualityScore: 0,
+        qualityStatus: "READINESS_BLOCKED",
+        freezeEligible: false,
+      },
       risks: gapReport.ambiguous_areas
     });
   }
@@ -273,6 +385,19 @@ export async function generateBlueprint(
   const stability = runStabilityAnalysis(input);
   logAudit("P1", "Stability Analysis", "passed", `Computed stability score ${stability.stabilityScore} (${stability.riskLevel}).`);
 
+  startStage("P1B");
+  const pressure = runArchitecturePressureModel(input);
+  const pattern = deriveArchitecturePattern(pressure.weightedScore);
+  const conflicts = detectArchitectureConflicts(input);
+  const derivedSignals = deriveSignals(input, pressure, stability, conflicts);
+  logAudit(
+    "P1B",
+    "Pressure Model",
+    conflicts.length > 0 ? "repaired" : "passed",
+    `Complexity score ${pressure.weightedScore}/100. Pattern: ${pattern}. Derived indexes computed.`,
+    conflicts.map((c) => `${c.id} [${c.severity}] ${c.message}`)
+  );
+
   startStage("P2");
   const archetypeDecision = selectArchetype(input, stability);
   logAudit("P2", "Archetype Selection", archetypeDecision.selectionMethod === "FORCED" ? "repaired" : "passed", `Selected ${archetypeDecision.selectedArchetype} (${archetypeDecision.selectionMethod}).`, archetypeDecision.forcedReasons);
@@ -282,15 +407,36 @@ export async function generateBlueprint(
   logAudit("P5", "PRD Quality Gate", qualityGate.status === "QUALITY_GATE_PASSED" ? "passed" : "repaired", `Quality gate ${qualityGate.status} with score ${qualityGate.score}.`, qualityGate.failedChecks.map((c) => `${c.checkId}: ${c.description}`));
 
   // --- DOWNSTREAM ADAPTATION (Mapping PRD to existing components) ---
-  const isHighScale = sanitisedConstraints.scale === "large" || sanitisedConstraints.scale === "global";
+  const isHighScale = sanitisedConstraints.scale === "large" || sanitisedConstraints.scale === "global" || pressure.dimensionScores.D5_scale_load >= 7;
   const isEnterprise = sanitisedConstraints.budget === "enterprise";
+
+  const inferredDatabase =
+    input.hasFinancialLogic ||
+    input.consistencyRequirement === "strong_consistency_required" ||
+    input.consistencyRequirement === "transactional_guarantees_required" ||
+    input.dataStructureType === "strongly_relational"
+      ? "PostgreSQL"
+      : input.dataStructureType === "document_oriented"
+        ? "MongoDB"
+        : input.dataStructureType === "time_series"
+          ? "TimescaleDB"
+          : "PostgreSQL";
+
+  const inferredBackend =
+    pattern === "simple_monolith" || pattern === "structured_monolith"
+      ? "Next.js API + modular services"
+      : pattern === "modular_monolith"
+        ? "Modular monolith (domain modules)"
+        : pattern === "event_driven_architecture"
+          ? "Event-driven services + queue orchestration"
+          : "Distributed services with explicit boundaries";
 
   // ARCHITECTURE (Domain 3)
   startStage("D3");
   const recommendedStack = {
     frontend: "Next.js 15, TypeScript, Tailwind",
-    backend: isHighScale ? "Distributed Node.js Microservices" : "Next.js Server Actions",
-    database: isHighScale ? "Postgres (Managed)" : "Postgres (Supabase)",
+    backend: inferredBackend,
+    database: inferredDatabase,
     infra: isEnterprise ? "AWS (Terraform)" : "Vercel",
   };
   const services = prd.features.filter(f => f.priority === "P0").map(f => ({
@@ -318,8 +464,16 @@ export async function generateBlueprint(
   logAudit("D4", "Engineering Plan", "passed", "Generated repository structure and API manifest.");
 
   const partialBlueprint: Blueprint = {
-    startupSummary: `PRD run for ${input.projectName} | Archetype: ${archetypeDecision.selectedArchetype} | Quality: ${qualityGate.score}/100 (${qualityGate.status})`,
-    architectureMode: archetypeDecision.selectedArchetype,
+    startupSummary: [
+      `PRD Run: ${prdRunId}.`,
+      `Executive Brief: ${input.projectName} complexity ${pressure.weightedScore}/100; risk ${stability.riskLevel}; recommended pattern ${pattern}.`,
+      `Architecture rationale: stability ${stability.stabilityScore}/100 (${archetypeDecision.selectionMethod} archetype ${archetypeDecision.selectedArchetype}), quality gate ${qualityGate.score}/100 (${qualityGate.status}).`,
+      `Derived Signals: Complexity ${derivedSignals.complexityIndex}, Regulatory ${derivedSignals.regulatoryBurdenIndex}, Financial Integrity ${derivedSignals.financialIntegrityIndex}, Scalability ${derivedSignals.scalabilityPressureIndex}, Operational Risk ${derivedSignals.operationalRiskIndex}.`,
+      conflicts.length > 0
+        ? `Conflict Resolution: ${conflicts.map((c) => `${c.id} ${c.message} -> ${c.recommendation}`).join(" | ")}`
+        : "Conflict Resolution: No hard architecture contradictions detected.",
+    ].join("\n\n"),
+    architectureMode: pattern,
     stabilityScore: stability.stabilityScore,
     riskLevel: stability.riskLevel,
     productSpec: {
@@ -333,12 +487,52 @@ export async function generateBlueprint(
     engineeringSpec,
     scalingPlan: [
       { stage: "Phase 1: MVP", strategy: "Consolidated Deployment" },
-      { stage: "Phase 2: Scale", strategy: isHighScale ? "Shard Primary Databases" : "Horizontal Scaling" },
+      { stage: "Phase 2: Growth", strategy: isHighScale ? "Introduce queue + cache + read-replica strategy" : "Modularize services and enforce API contracts" },
+      { stage: "Phase 3: Scale", strategy: pattern === "distributed_service_boundaries" ? "Multi-region service boundaries + async workflows" : "Promote bottleneck modules to event-driven components" },
+      { stage: "Phase 4: Enterprise", strategy: "Compliance hardening, observability SLOs, and cost governance" },
     ],
+    qualityReport: {
+      completenessScore: Math.min(100, qualityGate.score + qualityGate.failedChecks.length * 3),
+      consistencyDeduction: qualityGate.failedChecks.length * 3,
+      finalScore: qualityGate.score,
+      status: qualityGate.status,
+      failedSections: qualityGate.failedChecks.map((check) => ({
+        sectionId: check.checkId,
+        pointsLost: 3,
+        remediationInstruction: check.fix,
+      })),
+      failedChecks: qualityGate.failedChecks.map((check) => ({
+        checkId: check.checkId,
+        description: check.description,
+        fix: check.fix,
+      })),
+    },
+    governance: {
+      prdRunId,
+      prdVersion: "1.0.0",
+      prdStatus: qualityGate.score >= 85 ? "UNDER_REVIEW" : "REVISION_REQUIRED",
+      qualityPassed: qualityGate.score >= 85,
+      iterations: 1,
+      approvedBy: [],
+      approvedAt: null,
+      frozenAt: null,
+      downstreamUnlocked: false,
+    },
+    pipelineMeta: {
+      engineVersion: ENGINE_VERSION,
+      intakeSchemaVersion: input.intakeSchemaVersion ?? "unknown",
+      readinessScore: readiness.score,
+      qualityScore: qualityGate.score,
+      qualityStatus: qualityGate.status,
+      freezeEligible: qualityGate.score >= 85,
+    },
     risks: [
       ...stability.tensions.map((t) => `${t.id} [${t.severity}] ${t.title}: ${t.description}`),
+      ...conflicts.map((c) => `${c.id} [${c.severity}] ${c.message} | Recommendation: ${c.recommendation}`),
       ...qualityGate.failedChecks.map((c) => `${c.checkId}: ${c.description} | Fix: ${c.fix}`),
       ...sanitisedConstraints.contradiction_flags,
+      `Pressure Dimensions: D1 ${pressure.dimensionScores.D1_domain_complexity}, D2 ${pressure.dimensionScores.D2_data_complexity}, D3 ${pressure.dimensionScores.D3_financial_integrity}, D4 ${pressure.dimensionScores.D4_regulatory_pressure}, D5 ${pressure.dimensionScores.D5_scale_load}, D6 ${pressure.dimensionScores.D6_availability_resilience}, D7 ${pressure.dimensionScores.D7_security_sensitivity}, D8 ${pressure.dimensionScores.D8_integration_surface}, D9 ${pressure.dimensionScores.D9_intelligence_processing}, D10 ${pressure.dimensionScores.D10_evolution_horizon}`,
+      `Derived Indexes: complexity=${derivedSignals.complexityIndex}, regulatory=${derivedSignals.regulatoryBurdenIndex}, financial_integrity=${derivedSignals.financialIntegrityIndex}, scalability=${derivedSignals.scalabilityPressureIndex}, operational_risk=${derivedSignals.operationalRiskIndex}`,
     ],
     clarification: {
       status: "resolved",

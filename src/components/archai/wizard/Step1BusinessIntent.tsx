@@ -70,13 +70,14 @@ export function Step1BusinessIntent() {
           >
             <SelectTrigger><SelectValue placeholder="Select objective" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="new_revenue_streams">Generate new revenue streams</SelectItem>
-              <SelectItem value="reduce_operational_costs">Reduce operational costs</SelectItem>
-              <SelectItem value="replace_legacy_tooling">Replace legacy tooling</SelectItem>
-              <SelectItem value="enable_marketplace_transactions">Enable marketplace transactions</SelectItem>
-              <SelectItem value="aggregate_monetize_data">Aggregate and monetize data</SelectItem>
-              <SelectItem value="internal_process_optimization">Internal process optimization</SelectItem>
-              <SelectItem value="strategic_platform_expansion">Strategic platform expansion</SelectItem>
+              <SelectItem value="revenue_generation">Revenue generation</SelectItem>
+              <SelectItem value="cost_reduction">Cost reduction</SelectItem>
+              <SelectItem value="operational_automation">Operational automation</SelectItem>
+              <SelectItem value="regulatory_compliance">Regulatory compliance</SelectItem>
+              <SelectItem value="marketplace_enablement">Marketplace enablement</SelectItem>
+              <SelectItem value="platform_expansion">Platform expansion</SelectItem>
+              <SelectItem value="data_monetization">Data monetization</SelectItem>
+              <SelectItem value="internal_productivity">Internal productivity</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -94,13 +95,15 @@ export function Step1BusinessIntent() {
           >
             <SelectTrigger><SelectValue placeholder="Select model" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="subscription_tiers">Subscription tiers</SelectItem>
-              <SelectItem value="usage_based_billing">Usage-based billing</SelectItem>
-              <SelectItem value="commission_marketplace">Commission-based marketplace</SelectItem>
-              <SelectItem value="enterprise_contracts">Enterprise contracts</SelectItem>
-              <SelectItem value="freemium_conversion">Freemium conversion</SelectItem>
+              <SelectItem value="subscription">Subscription</SelectItem>
+              <SelectItem value="usage_based">Usage-based</SelectItem>
+              <SelectItem value="licensing">Licensing</SelectItem>
+              <SelectItem value="transaction_fees">Transaction fees</SelectItem>
+              <SelectItem value="commission">Commission</SelectItem>
               <SelectItem value="advertising">Advertising</SelectItem>
-              <SelectItem value="not_monetized_internal">Not monetized (internal tool)</SelectItem>
+              <SelectItem value="government_funding">Government funding</SelectItem>
+              <SelectItem value="internal_cost_savings">Internal cost savings</SelectItem>
+              <SelectItem value="not_revenue_driven">Not revenue-driven</SelectItem>
             </SelectContent>
           </Select>
         </div>

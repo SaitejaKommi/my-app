@@ -5,18 +5,6 @@ import { FullRequirementsData } from "@/db/requirements-schema"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-const dataClassificationOptions = [
-  ["public_content", "Public content"],
-  ["account_credentials", "Account credentials"],
-  ["pii", "PII"],
-  ["financial_data", "Financial data"],
-  ["health_records", "Health records"],
-  ["government_data", "Government data"],
-  ["trade_secrets", "Trade secrets"],
-  ["intellectual_property", "Intellectual property"],
-  ["biometric_data", "Biometric data"],
-] as const
-
 const computeNeedOptions = [
   ["scheduled_background_jobs", "Scheduled background jobs"],
   ["real_time_notifications", "Real-time notifications"],
@@ -36,44 +24,16 @@ const requestCharacteristicOptions = [
   ["grpc_required", "gRPC required"],
 ] as const
 
-const complianceFrameworkOptions = [
-  ["none", "None"],
-  ["gdpr", "GDPR"],
-  ["hipaa", "HIPAA"],
-  ["pci_dss", "PCI-DSS"],
-  ["soc2_type1", "SOC2 Type I"],
-  ["soc2_type2", "SOC2 Type II"],
-  ["iso_27001", "ISO 27001"],
-  ["fedramp", "FedRAMP"],
-  ["wcag_aa", "WCAG AA"],
-] as const
-
-export function Step3RiskScale() {
-  const { register, setValue, watch } = useFormContext<FullRequirementsData>()
-  const dataClassification = watch("dataClassification") ?? []
+export function Step7ScaleLoad() {
+  const { setValue, watch } = useFormContext<FullRequirementsData>()
   const computeNeeds = watch("computeNeeds") ?? []
   const requestCharacteristics = watch("requestCharacteristics") ?? []
-  const complianceFrameworks = watch("complianceFrameworks") ?? []
-
-  const toggleDataClassification = (value: NonNullable<FullRequirementsData["dataClassification"]>[number]) => {
-    const next = dataClassification.includes(value)
-      ? dataClassification.filter((item) => item !== value)
-      : [...dataClassification, value]
-    setValue("dataClassification", next)
-  }
 
   const toggleComputeNeed = (value: NonNullable<FullRequirementsData["computeNeeds"]>[number]) => {
     const next = computeNeeds.includes(value)
       ? computeNeeds.filter((item) => item !== value)
       : [...computeNeeds, value]
     setValue("computeNeeds", next)
-  }
-
-  const toggleComplianceFramework = (value: NonNullable<FullRequirementsData["complianceFrameworks"]>[number]) => {
-    const next = complianceFrameworks.includes(value)
-      ? complianceFrameworks.filter((item) => item !== value)
-      : [...complianceFrameworks, value]
-    setValue("complianceFrameworks", next.length > 0 ? next : ["none"])
   }
 
   const toggleRequestCharacteristic = (value: NonNullable<FullRequirementsData["requestCharacteristics"]>[number]) => {
@@ -86,80 +46,7 @@ export function Step3RiskScale() {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="space-y-4 rounded-xl border border-border/60 bg-card p-5">
-        <h3 className="text-lg font-medium">Step 3 — Risk, Compliance & Scale</h3>
-
-        <div className="space-y-2">
-          <Label>If the system is unavailable for 24 hours, what happens?</Label>
-          <Select
-            onValueChange={(v) => setValue("businessCriticality24hOutage", v as FullRequirementsData["businessCriticality24hOutage"])}
-            defaultValue={watch("businessCriticality24hOutage")}
-          >
-            <SelectTrigger><SelectValue placeholder="Select impact" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="minor_inconvenience">Minor inconvenience</SelectItem>
-              <SelectItem value="revenue_impact">Revenue impact</SelectItem>
-              <SelectItem value="contractual_penalties">Contractual penalties</SelectItem>
-              <SelectItem value="legal_exposure">Legal exposure</SelectItem>
-              <SelectItem value="safety_implications">Safety implications</SelectItem>
-              <SelectItem value="high_financial_damage_per_hour">High financial damage per hour</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Industry compliance frameworks</Label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {complianceFrameworkOptions.map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => toggleComplianceFramework(value)}
-                className={`rounded-md border px-3 py-2 text-sm text-left ${
-                  complianceFrameworks.includes(value)
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border bg-background"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Data classification stored by the system</Label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {dataClassificationOptions.map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => toggleDataClassification(value)}
-                className={`rounded-md border px-3 py-2 text-sm text-left ${
-                  dataClassification.includes(value)
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border bg-background"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <label className="flex items-center gap-3 rounded-lg border border-border/60 bg-background p-3 md:col-span-1">
-            <input type="checkbox" className="h-4 w-4" {...register("fieldLevelEncryptionRequired")} />
-            <span className="text-sm">Field-level encryption required</span>
-          </label>
-          <label className="flex items-center gap-3 rounded-lg border border-border/60 bg-background p-3 md:col-span-1">
-            <input type="checkbox" className="h-4 w-4" {...register("auditImmutabilityRequired")} />
-            <span className="text-sm">Audit immutability required</span>
-          </label>
-          <label className="flex items-center gap-3 rounded-lg border border-border/60 bg-background p-3 md:col-span-1">
-            <input type="checkbox" className="h-4 w-4" {...register("complianceCertificationWithin12Months")} />
-            <span className="text-sm">Certification needed within 12 months</span>
-          </label>
-        </div>
+        <h3 className="text-lg font-medium">Level 7 — Scale & Load Modeling</h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
@@ -174,7 +61,7 @@ export function Step3RiskScale() {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Users at 12 months</Label>
+            <Label>12-month projection</Label>
             <Select onValueChange={(v) => setValue("usersAt12Months", v as FullRequirementsData["usersAt12Months"])} defaultValue={watch("usersAt12Months")}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -185,7 +72,7 @@ export function Step3RiskScale() {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Users at 36 months</Label>
+            <Label>36-month projection</Label>
             <Select onValueChange={(v) => setValue("usersAt36Months", v as FullRequirementsData["usersAt36Months"])} defaultValue={watch("usersAt36Months")}>
               <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
               <SelectContent>
@@ -199,21 +86,21 @@ export function Step3RiskScale() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>Traffic profile</Label>
+            <Label>Traffic pattern</Label>
             <Select onValueChange={(v) => setValue("trafficProfile", v as FullRequirementsData["trafficProfile"])} defaultValue={watch("trafficProfile")}>
-              <SelectTrigger><SelectValue placeholder="Select profile" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Select pattern" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="predictable_steady">Predictable steady traffic</SelectItem>
+                <SelectItem value="predictable_steady">Predictable steady load</SelectItem>
                 <SelectItem value="seasonal_spikes">Seasonal spikes</SelectItem>
-                <SelectItem value="viral_unpredictable">Viral unpredictable bursts</SelectItem>
-                <SelectItem value="always_on_high_concurrency">Always-on high concurrency</SelectItem>
+                <SelectItem value="viral_unpredictable">Viral burst traffic</SelectItem>
+                <SelectItem value="always_on_high_concurrency">Constant high throughput</SelectItem>
                 <SelectItem value="high_frequency_event_ingestion">High-frequency event ingestion</SelectItem>
                 <SelectItem value="edge_device_ingestion">Edge device ingestion</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Peak simultaneous users</Label>
+            <Label>Peak concurrent users/connections</Label>
             <Select onValueChange={(v) => setValue("peakConcurrentUsers", v as FullRequirementsData["peakConcurrentUsers"])} defaultValue={watch("peakConcurrentUsers")}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
